@@ -3,15 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Purple Forest</title>
-    <link href="/index.css" rel="stylesheet" />
+    <title>Purple Forest sd</title>
+    <link href="index.css" rel="stylesheet" />
   </head>
   <body id="app">
     <header>
       <a href="/"
         ><h1>
           <img
-            src="/logo.svg"
+            src="logo.svg"
             alt="Purple Forest "
             width="50"
             height="60"
@@ -185,7 +185,7 @@
           </div>
         </dl>
         <div class="profile__actions">
-          <button type="button" data-action="follow">Follow</button>
+          <button type="button" data-action="follow"></button>
         </div>
         <div class="profile__who-to-follow">
           <h4>Who to follow</h4>
@@ -199,6 +199,7 @@
         <div><a data-username></a></div>
         <div class="profile__actions">
           <button type="button" data-action="follow">Follow</button>
+          <button type="button" data-action="unfollow">Unfollow</button>
         </div>
       </li>
     </template>
@@ -239,6 +240,9 @@
           <a href="#" class="bloom__time"><time class="bloom__time" data-time>2m</time></a>
         </div>
         <div class="bloom__content" data-content></div>
+        <button data-action="rebloom">
+          Re-bloom
+        </button>
       </article>
     </template>
 
@@ -256,6 +260,6 @@
       <p>Please enable JavaScript in your browser.</p>
     </noscript>
 
-    <script type="module" src="/index.mjs"></script>
+    <script type="module" src="index.mjs"></script>
   </body>
 </html>

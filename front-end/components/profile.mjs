@@ -26,33 +26,45 @@ function createProfile(template, {profileData, whoToFollow, isLoggedIn}) {
   bloomCountEl.textContent = profileData.total_blooms || 0;
   followerCountEl.textContent = profileData.followers?.length || 0;
   followingCountEl.textContent = profileData.follows?.length || 0;
+
   followButtonEl.setAttribute("data-username", profileData.username || "");
-  followButtonEl.hidden = profileData.is_self || profileData.is_following;
-  followButtonEl.addEventListener("click", handleFollow);
-  if (!isLoggedIn) {
+
+  if (profileData.is_self) {
     followButtonEl.style.display = "none";
-  }
-
-  if (whoToFollow.length > 0) {
-    const whoToFollowList = whoToFollowContainer.querySelector("[data-who-to-follow]");
-    const whoToFollowTemplate = document.querySelector("#who-to-follow-chip");
-    for (const userToFollow of whoToFollow) {
-      const wtfElement = whoToFollowTemplate.content.cloneNode(true);
-      const usernameLink = wtfElement.querySelector("a[data-username]");
-      usernameLink.innerText = userToFollow.username;
-      usernameLink.setAttribute("href", `/profile/${userToFollow.username}`);
-      const followButton = wtfElement.querySelector("button");
-      followButton.setAttribute("data-username", userToFollow.username);
-      followButton.addEventListener("click", handleFollow);
-      if (!isLoggedIn) {
-        followButton.style.display = "none";
-      }
-
-      whoToFollowList.appendChild(wtfElement);
-    }
+  } else if (profileData.is_following) {
+    followButtonEl.textContent = "Unfollow";
+    followButtonEl.setAttribute("data-action-type", "unfollow");
+    followButtonEl.addEventListener("click", handleUnfollow);
   } else {
-    whoToFollowContainer.innerText = "";
+    followButtonEl.textContent = "Follow";
+    followButtonEl.setAttribute("data-action-type", "follow");
+    followButtonEl.addEventListener("click", handleFollow)
   }
+
+    if (!isLoggedIn) {
+      followButtonEl.style.display = "none";
+    }
+
+    if (whoToFollow.length > 0) {
+      const whoToFollowList = whoToFollowContainer.querySelector("[data-who-to-follow]");
+      const whoToFollowTemplate = document.querySelector("#who-to-follow-chip");
+      for (const userToFollow of whoToFollow) {
+        const wtfElement = whoToFollowTemplate.content.cloneNode(true);
+        const usernameLink = wtfElement.querySelector("a[data-username]");
+        usernameLink.innerText = userToFollow.username;
+        usernameLink.setAttribute("href", `/profile/${userToFollow.username}`);
+        const followButton = wtfElement.querySelector("button");
+        followButton.setAttribute("data-username", userToFollow.username);
+        followButton.addEventListener("click", handleFollow);
+        if (!isLoggedIn) {
+          followButton.style.display = "none";
+        }
+
+        whoToFollowList.appendChild(wtfElement);
+      }
+    } else {
+      whoToFollowContainer.innerText = "";
+    }
 
   return profileElement;
 }
@@ -63,7 +75,21 @@ async function handleFollow(event) {
   if (!username) return;
 
   await apiService.followUser(username);
-  await apiService.getWhoToFollow();
+  window.location.reload();
 }
 
-export {createProfile, handleFollow};
+async function handleUnfollow(event) {
+  const button = event.target;
+  const username = button.getAttribute("data-username");
+  if (!username) return;
+
+  await apiService.unfollowUser(username);
+  // refresh profile unfollowed
+  await apiService.getProfile(username);
+  // refresh our own profile
+  await apiService.getProfile();
+
+  window.location.reload();
+}
+
+export {createProfile, handleFollow, handleUnfollow};

@@ -4,6 +4,7 @@ from custom_json_provider import CustomJsonProvider
 from data.users import lookup_user
 from endpoints import (
     do_follow,
+    do_unfollow,
     get_bloom,
     hashtag,
     home_timeline,
@@ -14,6 +15,7 @@ from endpoints import (
     send_bloom,
     suggested_follows,
     user_blooms,
+    do_rebloom,
 )
 
 from dotenv import load_dotenv
@@ -37,7 +39,7 @@ def main():
             r"/*": {
                 "origins": "*",
                 "allow_headers": ["Content-Type", "Authorization"],
-                "methods": ["GET", "POST", "OPTIONS"],
+                "methods": ["GET", "POST", "OPTIONS", "DELETE"],
             }
         },
     )
@@ -54,12 +56,15 @@ def main():
     app.add_url_rule("/profile", view_func=self_profile)
     app.add_url_rule("/profile/<profile_username>", view_func=other_profile)
     app.add_url_rule("/follow", methods=["POST"], view_func=do_follow)
+    app.add_url_rule("/follow/<username>", view_func=do_unfollow, methods=["DELETE"])
     app.add_url_rule("/suggested-follows/<limit_str>", view_func=suggested_follows)
 
     app.add_url_rule("/bloom", methods=["POST"], view_func=send_bloom)
     app.add_url_rule("/bloom/<id_str>", methods=["GET"], view_func=get_bloom)
     app.add_url_rule("/blooms/<profile_username>", view_func=user_blooms)
     app.add_url_rule("/hashtag/<hashtag>", view_func=hashtag)
+    
+    app.add_url_rule("/bloom/<id_str>/rebloom", methods=["POST"], view_func=do_rebloom)
 
     app.run(host="0.0.0.0", port="3000", debug=True)
 

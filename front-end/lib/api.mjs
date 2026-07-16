@@ -212,6 +212,12 @@ async function postBloom(content) {
   }
 }
 
+async function rebloom(bloomId) {
+  return await _apiRequest(`/bloom/${bloomId}/rebloom`, {
+    method: "POST",
+  });
+}
+
 // ======= USER methods
 async function getProfile(username) {
   const endpoint = username ? `/profile/${username}` : "/profile";
@@ -259,14 +265,35 @@ async function followUser(username) {
   }
 }
 
+// async function unfollowUser(username) {
+//   try {
+//     const data = await _apiRequest(`/unfollow/${username}`, {
+//       method: "POST",
+//     });
+
+//     if (data.success) {
+//       // Update both the unfollowed user's profile and the current user's profile
+//       await Promise.all([
+//         getProfile(username),
+//         getProfile(state.currentUser),
+//         getBlooms(),
+//       ]);
+//     }
+
+//     return data;
+//   } catch (error) {
+//     // Error already handled by _apiRequest
+//     return {success: false};
+//   }
+// }
+
 async function unfollowUser(username) {
   try {
-    const data = await _apiRequest(`/unfollow/${username}`, {
-      method: "POST",
+    const data = await _apiRequest(`/follow/${username}`, {
+      method: "DELETE",
     });
 
     if (data.success) {
-      // Update both the unfollowed user's profile and the current user's profile
       await Promise.all([
         getProfile(username),
         getProfile(state.currentUser),
@@ -276,7 +303,6 @@ async function unfollowUser(username) {
 
     return data;
   } catch (error) {
-    // Error already handled by _apiRequest
     return {success: false};
   }
 }
@@ -292,6 +318,7 @@ const apiService = {
   getBlooms,
   postBloom,
   getBloomsByHashtag,
+  rebloom,
 
   // User methods
   getProfile,

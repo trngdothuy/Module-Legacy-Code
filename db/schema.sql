@@ -13,12 +13,18 @@ CREATE TABLE blooms (
     send_timestamp TIMESTAMP NOT NULL
 );
 
+ALTER TABLE blooms
+ADD COLUMN rebloom_of BIGINT REFERENCES blooms(id);
+
 CREATE TABLE follows (
     id SERIAL PRIMARY KEY,
     follower INT NOT NULL REFERENCES users(id),
     followee INT NOT NULL REFERENCES users(id),
     UNIQUE(follower, followee)
 );
+
+ALTER TABLE follows
+ADD CONSTRAINT unique_follow UNIQUE(follower_id, followed_id);
 
 CREATE TABLE hashtags (
     id SERIAL PRIMARY KEY,
