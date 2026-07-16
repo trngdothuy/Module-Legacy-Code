@@ -8,6 +8,7 @@ from data.users import (
     get_user,
     register_user,
 )
+from data.connection import db_cursor
 
 from flask import Response, jsonify, make_response, request
 from flask_jwt_extended import (
@@ -181,40 +182,7 @@ def get_bloom(id_str):
 
 @jwt_required()
 def home_timeline():
-    with db_cursor() as cur:
-        cur.execute(
-            """
-            SELECT
-                blooms.id,
-                users.username,
-                content,
-                send_timestamp,
-                rebloom_of
-            FROM blooms
-            INNER JOIN users
-            ON users.id = blooms.sender_id
-            ORDER BY send_timestamp DESC
-            LIMIT 50
-            """
-        )
-
-        rows = cur.fetchall()
-
-    result = []
-
-    for row in rows:
-        bloom_id, username, content, timestamp, rebloom_of = row
-        result.append(
-            blooms.Bloom(
-                id=bloom_id,
-                sender=username,
-                content=content,
-                sent_timestamp=timestamp,
-                rebloom_of=rebloom_of,
-            )
-        )
-
-    return jsonify(result)
+    return jsonify(blooms.get_all_blooms())
 
 def user_blooms(profile_username):
     user_blooms = blooms.get_blooms_for_user(profile_username)
@@ -274,4 +242,12 @@ def do_rebloom(id_str):
             404,
         )
 
-    return jsonify(bloom)
+    return jsonify(
+        {
+            "id": bloom.id,
+            "sender": user.username,
+            "content": bloom.content,
+            "sent_timestamp": bloom.sent_timestamp,
+            "rebloom_of": bloom.rebloom_of,
+        }
+    )

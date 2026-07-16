@@ -118,7 +118,7 @@ def get_blooms_with_hashtag(
     with db_cursor() as cur:
         cur.execute(
             f"""SELECT
-              blooms.id, users.username, content, send_timestamp, rebloom_of = row
+              blooms.id, users.username, content, send_timestamp, rebloom_of
             FROM
               blooms INNER JOIN hashtags ON blooms.id = hashtags.bloom_id INNER JOIN users ON blooms.sender_id = users.id
             WHERE
@@ -142,6 +142,37 @@ def get_blooms_with_hashtag(
                 )
             )
     return blooms
+
+def get_all_blooms(limit=50):
+    with db_cursor() as cur:
+        cur.execute(
+            """
+            SELECT
+                blooms.id,
+                users.username,
+                content,
+                send_timestamp,
+                rebloom_of
+            FROM blooms
+            INNER JOIN users ON users.id = blooms.sender_id
+            ORDER BY send_timestamp DESC
+            LIMIT %(limit)s
+            """,
+            {"limit": limit},
+        )
+
+        rows = cur.fetchall()
+
+    return [
+        Bloom(
+            id=row[0],
+            sender=row[1],
+            content=row[2],
+            sent_timestamp=row[3],
+            rebloom_of=row[4],
+        )
+        for row in rows
+    ]
 
 
 def make_limit_clause(limit: Optional[int], kwargs: Dict[Any, Any]) -> str:
@@ -186,7 +217,7 @@ def add_rebloom(*, sender: User, bloom_id: int) -> Bloom:
 
     return Bloom(
         id=row[0],
-        sender=sender,
+        sender=sender.username,
         content=row[1],
         sent_timestamp=row[2],
         rebloom_of=row[3],
