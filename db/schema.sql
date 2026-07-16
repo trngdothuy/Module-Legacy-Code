@@ -23,6 +23,9 @@ CREATE TABLE follows (
     UNIQUE(follower, followee)
 );
 
+ALTER TABLE follows
+ADD CONSTRAINT unique_follow UNIQUE(follower_id, followed_id);
+
 CREATE TABLE hashtags (
     id SERIAL PRIMARY KEY,
     hashtag VARCHAR NOT NULL,

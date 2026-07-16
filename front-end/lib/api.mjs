@@ -265,26 +265,32 @@ async function followUser(username) {
   }
 }
 
+// async function unfollowUser(username) {
+//   try {
+//     const data = await _apiRequest(`/unfollow/${username}`, {
+//       method: "POST",
+//     });
+
+//     if (data.success) {
+//       // Update both the unfollowed user's profile and the current user's profile
+//       await Promise.all([
+//         getProfile(username),
+//         getProfile(state.currentUser),
+//         getBlooms(),
+//       ]);
+//     }
+
+//     return data;
+//   } catch (error) {
+//     // Error already handled by _apiRequest
+//     return {success: false};
+//   }
+// }
+
 async function unfollowUser(username) {
-  try {
-    const data = await _apiRequest(`/unfollow/${username}`, {
-      method: "POST",
-    });
-
-    if (data.success) {
-      // Update both the unfollowed user's profile and the current user's profile
-      await Promise.all([
-        getProfile(username),
-        getProfile(state.currentUser),
-        getBlooms(),
-      ]);
-    }
-
-    return data;
-  } catch (error) {
-    // Error already handled by _apiRequest
-    return {success: false};
-  }
+  return await _apiRequest(`/follow/${username}`, {
+    method: "DELETE",
+  });
 }
 
 const apiService = {
