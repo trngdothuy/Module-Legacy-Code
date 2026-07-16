@@ -1,5 +1,6 @@
 from typing import Dict, Union
 from data import blooms
+from data.blooms import add_rebloom
 from data.follows import follow, get_followed_usernames, get_inverse_followed_usernames
 from data.users import (
     UserRegistrationError,
@@ -180,31 +181,40 @@ def get_bloom(id_str):
 
 @jwt_required()
 def home_timeline():
-    current_user = get_current_user()
+    with db_cursor() as cur:
+        cur.execute(
+            """
+            SELECT
+                blooms.id,
+                users.username,
+                content,
+                send_timestamp,
+                rebloom_of
+            FROM blooms
+            INNER JOIN users
+            ON users.id = blooms.sender_id
+            ORDER BY send_timestamp DESC
+            LIMIT 50
+            """
+        )
 
-    # Get blooms from followed users
-    followed_users = get_followed_usernames(current_user)
-    nested_user_blooms = [
-        blooms.get_blooms_for_user(followed_user, limit=50)
-        for followed_user in followed_users
-    ]
+        rows = cur.fetchall()
 
-    # Flatten list of blooms from followed users
-    followed_blooms = [bloom for blooms in nested_user_blooms for bloom in blooms]
+    result = []
 
-    # Get the current user's own blooms
-    own_blooms = blooms.get_blooms_for_user(current_user.username, limit=50)
+    for row in rows:
+        bloom_id, username, content, timestamp, rebloom_of = row
+        result.append(
+            blooms.Bloom(
+                id=bloom_id,
+                sender=username,
+                content=content,
+                sent_timestamp=timestamp,
+                rebloom_of=rebloom_of,
+            )
+        )
 
-    # Combine own blooms with followed blooms
-    all_blooms = followed_blooms + own_blooms
-
-    # Sort by timestamp (newest first)
-    sorted_blooms = list(
-        sorted(all_blooms, key=lambda bloom: bloom.sent_timestamp, reverse=True)
-    )
-
-    return jsonify(sorted_blooms)
-
+    return jsonify(result)
 
 def user_blooms(profile_username):
     user_blooms = blooms.get_blooms_for_user(profile_username)
@@ -245,3 +255,23 @@ def verify_request_fields(names_to_types: Dict[str, type]) -> Union[Response, No
                 )
             )
     return None
+
+@jwt_required()
+def do_rebloom(id_str):
+    user = get_current_user()
+
+    try:    
+        bloom = add_rebloom(
+            sender=user,
+            bloom_id=int(id_str)
+        )
+    except ValueError as error:
+        return make_response(
+            {
+                "success": False,
+                "message": str(error)
+            },
+            404,
+        )
+
+    return jsonify(bloom)

@@ -13,6 +13,9 @@ CREATE TABLE blooms (
     send_timestamp TIMESTAMP NOT NULL
 );
 
+ALTER TABLE blooms
+ADD COLUMN rebloom_of BIGINT REFERENCES blooms(id);
+
 CREATE TABLE follows (
     id SERIAL PRIMARY KEY,
     follower INT NOT NULL REFERENCES users(id),

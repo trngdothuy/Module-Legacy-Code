@@ -1,3 +1,5 @@
+import { apiService } from "../lib/api.mjs";
+
 /**
  * Create a bloom component
  * @param {string} template - The ID of the template to clone
@@ -30,6 +32,20 @@ const createBloom = (template, bloom) => {
     ...bloomParser.parseFromString(_formatHashtags(bloom.content), "text/html")
       .body.childNodes
   );
+
+  const rebloomButton =
+    bloomFrag.querySelector("[data-action='rebloom']");
+
+    rebloomButton?.addEventListener("click", async () => {
+      await apiService.rebloom(bloom.id);
+  });
+
+  if (bloom.rebloom_of) {
+      const label = document.createElement("div");
+      label.textContent =
+        `${bloom.sender} re-bloomed this`;
+      bloomContent.prepend(label);
+  }
 
   return bloomFrag;
 };

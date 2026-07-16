@@ -64,7 +64,8 @@ def main():
     writer_access_token = create_user("AS", "neverSt0pTalking")
     send_bloom(
         writer_access_token,
-        "In this essay I will convince you that my views are correct in ways you have never imagined. If it doesn't change your life, read it again. Marshmallows are magnificent. They have great squish, tasty good, and you can even toast them over a fire. Toast them just right until they have a tiny bit of crunch when you bite into them, and have just started melting in the middle.",
+        # "In this essay I will convince you that my views are correct in ways you have never imagined. If it doesn't change your life, read it again. Marshmallows are magnificent. They have great squish, tasty good, and you can even toast them over a fire. Toast them just right until they have a tiny bit of crunch when you bite into them, and have just started melting in the middle.",
+        "Text longer than 280 characters should not be allowed. This is a test to see if the backend correctly rejects blooms that are too long. If this bloom is accepted, then there is a bug in the backend that needs to be fixed. The maximum length for a bloom is 280 characters, and this text exceeds that limit. Therefore, it should not be accepted by the backend.",
     )
 
     justsomeguy_access_token = create_user("JustSomeGuy", "mysterious")

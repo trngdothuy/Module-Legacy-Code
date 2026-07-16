@@ -13,6 +13,9 @@ class Bloom:
     sender: User
     content: str
     sent_timestamp: datetime.datetime
+    rebloom_of: Optional[int] = None
+    original_sender: Optional[str] = None
+    rebloom_count: int = 0
 
 
 def add_bloom(*, sender: User, content: str) -> Bloom:
@@ -32,6 +35,7 @@ def add_bloom(*, sender: User, content: str) -> Bloom:
                 sender_id=sender.id,
                 content=content,
                 timestamp=datetime.datetime.now(datetime.UTC),
+                rebloom_of=None,
             ),
         )
         for hashtag in hashtags:
@@ -58,7 +62,7 @@ def get_blooms_for_user(
 
         cur.execute(
             f"""SELECT
-              blooms.id, users.username, content, send_timestamp
+              blooms.id, users.username, content, send_timestamp, rebloom_of
             FROM
               blooms INNER JOIN users ON users.id = blooms.sender_id
             WHERE
@@ -72,13 +76,14 @@ def get_blooms_for_user(
         rows = cur.fetchall()
         blooms = []
         for row in rows:
-            bloom_id, sender_username, content, timestamp = row
+            bloom_id, sender_username, content, timestamp, rebloom_of = row
             blooms.append(
                 Bloom(
                     id=bloom_id,
                     sender=sender_username,
                     content=content,
                     sent_timestamp=timestamp,
+                    rebloom_of=rebloom_of,
                 )
             )
     return blooms
@@ -87,18 +92,19 @@ def get_blooms_for_user(
 def get_bloom(bloom_id: int) -> Optional[Bloom]:
     with db_cursor() as cur:
         cur.execute(
-            "SELECT blooms.id, users.username, content, send_timestamp FROM blooms INNER JOIN users ON users.id = blooms.sender_id WHERE blooms.id = %s",
+            "SELECT blooms.id, users.username, content, send_timestamp, rebloom_of FROM blooms INNER JOIN users ON users.id = blooms.sender_id WHERE blooms.id = %s",
             (bloom_id,),
         )
         row = cur.fetchone()
         if row is None:
             return None
-        bloom_id, sender_username, content, timestamp = row
+        bloom_id, sender_username, content, timestamp, rebloom_of = row
         return Bloom(
             id=bloom_id,
             sender=sender_username,
             content=content,
             sent_timestamp=timestamp,
+            rebloom_of=rebloom_of,
         )
 
 
@@ -112,7 +118,7 @@ def get_blooms_with_hashtag(
     with db_cursor() as cur:
         cur.execute(
             f"""SELECT
-              blooms.id, users.username, content, send_timestamp
+              blooms.id, users.username, content, send_timestamp, rebloom_of = row
             FROM
               blooms INNER JOIN hashtags ON blooms.id = hashtags.bloom_id INNER JOIN users ON blooms.sender_id = users.id
             WHERE
@@ -132,6 +138,7 @@ def get_blooms_with_hashtag(
                     sender=sender_username,
                     content=content,
                     sent_timestamp=timestamp,
+                    rebloom_of=rebloom_of,
                 )
             )
     return blooms
@@ -144,3 +151,43 @@ def make_limit_clause(limit: Optional[int], kwargs: Dict[Any, Any]) -> str:
     else:
         limit_clause = ""
     return limit_clause
+
+def add_rebloom(*, sender: User, bloom_id: int) -> Bloom:
+    now = datetime.datetime.now(datetime.UTC)
+    new_id = int(now.timestamp() * 1000000)
+
+    with db_cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO blooms
+            (id, sender_id, content, send_timestamp, rebloom_of)
+            SELECT
+                %(new_id)s,
+                %(sender_id)s,
+                content,
+                %(timestamp)s,
+                id
+            FROM blooms
+            WHERE id=%(bloom_id)s
+            RETURNING id, content, send_timestamp, rebloom_of
+            """,
+            {
+                "new_id": new_id,
+                "sender_id": sender.id,
+                "timestamp": now,
+                "bloom_id": bloom_id,
+            },
+        )
+
+        row = cur.fetchone()
+
+    if row is None:
+        raise ValueError(f"Bloom with id {bloom_id} does not exist.")
+
+    return Bloom(
+        id=row[0],
+        sender=sender,
+        content=row[1],
+        sent_timestamp=row[2],
+        rebloom_of=row[3],
+    )
