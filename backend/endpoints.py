@@ -1,5 +1,6 @@
 from typing import Dict, Union
 from data import blooms
+from data.blooms import add_rebloom
 from data.follows import follow, get_followed_usernames, get_inverse_followed_usernames
 from data.users import (
     UserRegistrationError,
@@ -7,6 +8,7 @@ from data.users import (
     get_user,
     register_user,
 )
+from data.connection import db_cursor
 
 from flask import Response, jsonify, make_response, request
 from flask_jwt_extended import (
@@ -180,31 +182,7 @@ def get_bloom(id_str):
 
 @jwt_required()
 def home_timeline():
-    current_user = get_current_user()
-
-    # Get blooms from followed users
-    followed_users = get_followed_usernames(current_user)
-    nested_user_blooms = [
-        blooms.get_blooms_for_user(followed_user, limit=50)
-        for followed_user in followed_users
-    ]
-
-    # Flatten list of blooms from followed users
-    followed_blooms = [bloom for blooms in nested_user_blooms for bloom in blooms]
-
-    # Get the current user's own blooms
-    own_blooms = blooms.get_blooms_for_user(current_user.username, limit=50)
-
-    # Combine own blooms with followed blooms
-    all_blooms = followed_blooms + own_blooms
-
-    # Sort by timestamp (newest first)
-    sorted_blooms = list(
-        sorted(all_blooms, key=lambda bloom: bloom.sent_timestamp, reverse=True)
-    )
-
-    return jsonify(sorted_blooms)
-
+    return jsonify(blooms.get_all_blooms())
 
 def user_blooms(profile_username):
     user_blooms = blooms.get_blooms_for_user(profile_username)
@@ -245,3 +223,31 @@ def verify_request_fields(names_to_types: Dict[str, type]) -> Union[Response, No
                 )
             )
     return None
+
+@jwt_required()
+def do_rebloom(id_str):
+    user = get_current_user()
+
+    try:    
+        bloom = add_rebloom(
+            sender=user,
+            bloom_id=int(id_str)
+        )
+    except ValueError as error:
+        return make_response(
+            {
+                "success": False,
+                "message": str(error)
+            },
+            404,
+        )
+
+    return jsonify(
+        {
+            "id": bloom.id,
+            "sender": user.username,
+            "content": bloom.content,
+            "sent_timestamp": bloom.sent_timestamp,
+            "rebloom_of": bloom.rebloom_of,
+        }
+    )
