@@ -70,6 +70,7 @@ function createProfile(template, {profileData, whoToFollow, isLoggedIn}) {
 }
 
 async function handleFollow(event) {
+  const button = event.target;
   const username = button.getAttribute("data-username");
   if (!username) return;
 
@@ -78,6 +79,7 @@ async function handleFollow(event) {
 }
 
 async function handleUnfollow(event) {
+  const button = event.target;
   const username = button.getAttribute("data-username");
   if (!username) return;
 
