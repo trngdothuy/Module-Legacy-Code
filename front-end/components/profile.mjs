@@ -41,29 +41,6 @@ function createProfile(template, {profileData, whoToFollow, isLoggedIn}) {
     followButtonEl.addEventListener("click", handleFollow)
   }
 
-  const unfollowButtonEl = profileElement.querySelector(
-  "[data-action='unfollow']"
-);
-
-followButtonEl.hidden =
-  profileData.is_self || profileData.is_following;
-
-unfollowButtonEl.hidden =
-  profileData.is_self || !profileData.is_following;
-
-followButtonEl.setAttribute(
-  "data-username",
-  profileData.username
-);
-
-unfollowButtonEl.setAttribute(
-  "data-username",
-  profileData.username
-);
-
-  followButtonEl.addEventListener("click", handleFollow);
-  unfollowButtonEl.addEventListener("click", handleUnfollow);
-
     if (!isLoggedIn) {
       followButtonEl.style.display = "none";
     }
@@ -93,31 +70,19 @@ unfollowButtonEl.setAttribute(
 }
 
 async function handleFollow(event) {
-  const button = event.target;
   const username = button.getAttribute("data-username");
-
   if (!username) return;
 
-  const action = button.getAttribute("data-action-type");
-
-  if (action === "unfollow") {
-    await apiService.unfollowUser(username);
-  } else {
-    await apiService.followUser(username);
-  }
-
+  await apiService.followUser(username);
   window.location.reload();
 }
 
 async function handleUnfollow(event) {
-  const button = event.target;
   const username = button.getAttribute("data-username");
-
   if (!username) return;
 
   await apiService.unfollowUser(username);
-
-  await apiService.getProfile(username);
+  window.location.reload();
 }
 
 export {createProfile, handleFollow, handleUnfollow};

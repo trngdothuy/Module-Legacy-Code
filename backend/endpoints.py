@@ -180,7 +180,17 @@ def other_profile(profile_username):
 
     current_user = get_current_user()
 
+    print("profile_user:", profile_user.username)
+    print("current_user:", current_user)
+    print("current username:", None if current_user is None else current_user.username)
+
     followers = get_inverse_followed_usernames(profile_user)
+    print("followers:", followers)
+
+    print(
+        "is_following =",
+        current_user is not None and current_user.username in followers
+    )
 
     all_blooms = blooms.get_blooms_for_user(profile_username)
     all_blooms.reverse()

@@ -25,12 +25,12 @@ def unfollow(follower: User, followed: User):
         cur.execute(
             """
             DELETE FROM follows
-            WHERE follower_id = %(follower_id)s
-            AND followed_id = %(followed_id)s
+            WHERE follower = %(follower_id)s
+            AND followee = %(followed_id)s
             """,
             {
-                "follower_id": follower.id,
-                "followed_id": followed.id,
+                "follower": follower.id,
+                "followee": followed.id,
             },
         )
 
