@@ -29,8 +29,8 @@ def unfollow(follower: User, followed: User):
             AND followee = %(followed_id)s
             """,
             {
-                "follower": follower.id,
-                "followee": followed.id,
+                "follower_id": follower.id,
+                "followed_id": followed.id,
             },
         )
 

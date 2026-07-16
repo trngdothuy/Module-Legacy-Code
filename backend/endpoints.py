@@ -97,41 +97,6 @@ def self_profile():
     )
 
 
-@jwt_required(optional=True)
-def other_profile(profile_username):
-    # Check if the user exists
-    profile_user = get_user(profile_username)
-    if profile_user is None:
-        return make_response(
-            jsonify(
-                {"success": False, "message": f"User {profile_username} not found"}
-            ),
-            404,
-        )
-
-    current_user = get_current_user()
-
-    followers = get_inverse_followed_usernames(profile_user)
-    is_following = False
-    if current_user is not None:
-        is_following = profile_username in get_followed_usernames(current_user)
-
-
-    all_blooms = blooms.get_blooms_for_user(profile_username)
-    all_blooms.reverse()
-    return jsonify(
-        {
-            "username": profile_username,
-            "recent_blooms": all_blooms[:10],
-            "follows": get_followed_usernames(profile_user),
-            "followers": list(followers),
-            "is_following": is_following,
-            "is_self": current_user is not None
-            and current_user.username == profile_username,
-            "total_blooms": len(all_blooms),
-        }
-    )
-
 
 @jwt_required()
 def do_follow():
@@ -158,8 +123,12 @@ def do_follow():
 @jwt_required()
 def do_unfollow(username):
     current_user = get_current_user()
+    other_user = get_user(username)
 
-    unfollow(current_user, get_user(username))
+    if other_user is None:
+        return jsonify({"success": False}), 404
+
+    unfollow(current_user, other_user)
 
     return jsonify({
         "success": True
