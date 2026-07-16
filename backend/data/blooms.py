@@ -120,7 +120,9 @@ def get_blooms_with_hashtag(
             f"""SELECT
               blooms.id, users.username, content, send_timestamp, rebloom_of
             FROM
-              blooms INNER JOIN hashtags ON blooms.id = hashtags.bloom_id INNER JOIN users ON blooms.sender_id = users.id
+              blooms 
+              INNER JOIN hashtags ON blooms.id = hashtags.bloom_id 
+              INNER JOIN users ON blooms.sender_id = users.id
             WHERE
               hashtag = %(hashtag_without_leading_hash)s
             ORDER BY send_timestamp DESC
@@ -131,7 +133,7 @@ def get_blooms_with_hashtag(
         rows = cur.fetchall()
         blooms = []
         for row in rows:
-            bloom_id, sender_username, content, timestamp = row
+            bloom_id, sender_username, content, timestamp, rebloom_of = row
             blooms.append(
                 Bloom(
                     id=bloom_id,
