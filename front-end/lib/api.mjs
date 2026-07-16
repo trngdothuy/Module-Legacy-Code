@@ -288,9 +288,23 @@ async function followUser(username) {
 // }
 
 async function unfollowUser(username) {
-  return await _apiRequest(`/follow/${username}`, {
-    method: "DELETE",
-  });
+  try {
+    const data = await _apiRequest(`/follow/${username}`, {
+      method: "DELETE",
+    });
+
+    if (data.success) {
+      await Promise.all([
+        getProfile(username),
+        getProfile(state.currentUser),
+        getBlooms(),
+      ]);
+    }
+
+    return data;
+  } catch (error) {
+    return {success: false};
+  }
 }
 
 const apiService = {

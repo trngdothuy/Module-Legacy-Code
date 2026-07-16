@@ -84,6 +84,11 @@ async function handleUnfollow(event) {
   if (!username) return;
 
   await apiService.unfollowUser(username);
+  // refresh profile unfollowed
+  await apiService.getProfile(username);
+  // refresh our own profile
+  await apiService.getProfile();
+
   window.location.reload();
 }
 
